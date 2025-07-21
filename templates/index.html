@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>X-ray Anomaly Detection</title>
+<style>
+  /* Reset */
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Roboto', Arial, sans-serif;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  body {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  h1 {
+    font-weight: 700;
+    font-size: 4rem;
+    margin-bottom: 40px;
+    /* Gradient text */
+    background: linear-gradient(90deg, #ff3c78, #ffaf40, #00c6ff, #8456ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: gradientAnimation 8s ease infinite;
+  }
+
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  form {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 25px;
+    border: 1px solid #dadce0;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgb(32 33 36 / 0.2);
+  }
+
+  input[type="file"] {
+    margin-bottom: 25px;
+    font-size: 1rem;
+    padding: 10px;
+    border: 1px solid #dadce0;
+    border-radius: 5px;
+    width: 100%;
+  }
+
+  button {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 15px 0;
+    width: 100%;
+    font-size: 1.25rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+  }
+
+  button:hover {
+    background-color: #155ab6;
+  }
+
+  .output-container {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+  }
+
+  .output-container h2 {
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+
+  .images-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+
+  .images-row img {
+    max-width: 280px;
+    border-radius: 6px;
+    border: 1px solid #dadce0;
+    box-shadow: 0 1px 3px rgb(32 33 36 / 0.1);
+  }
+
+  a.download-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 30px;
+    background-color: #34a853;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+
+  a.download-button:hover {
+    background-color: #2c8c47;
+  }
+
+  @media (max-width: 600px) {
+    form, .output-container {
+      max-width: 90%;
+      padding: 20px;
+    }
+    .images-row {
+      flex-direction: column;
+      gap: 20px;
+    }
+    .images-row img {
+      max-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>X-ray Anomaly Detection</h1>
+
+<form method="POST" enctype="multipart/form-data" novalidate>
+  <input type="file" name="file" accept="image/*" required />
+  <button type="submit">Upload and Analyze</button>
+</form>
+
+{% if original_image and output_image %}
+<div class="output-container">
+  <h2>Results</h2>
+  <div class="images-row">
+    <div>
+      <p><strong>Original Image</strong></p>
+      <img src="{{ original_image }}" alt="Original X-ray" />
+    </div>
+    <div>
+      <p><strong>Processed Image</strong></p>
+      <img src="{{ output_image }}" alt="Output X-ray" />
+    </div>
+  </div>
+  <a class="download-button" href="{{ output_image }}" download>Download Processed Image</a>
+</div>
+{% endif %}
+
+</body>
+</html>

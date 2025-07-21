@@ -1,0 +1,30 @@
+# Ignore virtual environment
+venv/
+.VENV/
+.env/
+ENV/
+.venv/
+env/
+
+# Ignore Python cache and compiled files
+__pycache__/
+*.pyc
+
+# Ignore model and large data files
+*.pth
+*.pt
+*.ckpt
+*.h5
+
+# Ignore large archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Ignore notebook and misc dev files
+*.ipynb
+.DS_Store
+
+# Git repo itself (optional but can save 40-50MB)
+.git/
