@@ -1,52 +1,43 @@
+import streamlit as st
+from PIL import Image
+import torch
+import numpy as np
+import cv2
+from inference import load_model, preprocess_image, compute_anomaly_map
+from unet_autoencoder import UNetAutoencoder
 import os
-import gdown
 
-MODEL_PATH = 'unet_epoch_30.pth'
-MODEL_URL = 'https://drive.google.com/uc?id=11GnEWwB0HWViMY2zTOuvgBYDc-MY0-3U'
+# Load the model only once
+@st.cache_resource
+def load_trained_model():
+    model_path = 'unet_epoch_30.pth'
+    return load_model(model_path)
 
-def download_model():
-    if not os.path.exists(MODEL_PATH):
-        print("Downloading model...")
-        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
-    else:
-        print("Model already exists.")
+model = load_trained_model()
 
-from flask import Flask, render_template, request, url_for
-from werkzeug.utils import secure_filename
-from inference import generate_output_image  # uses the inference.py function
+st.title("Chest X-ray Anomaly Detector")
+st.write("Upload a chest X-ray and view the anomaly heatmap using our UNet Autoencoder.")
 
-app = Flask(__name__)
+uploaded_file = st.file_uploader("Choose an X-ray image", type=["png", "jpg", "jpeg"])
 
-UPLOAD_FOLDER = 'static/uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+if uploaded_file is not None:
+    # Display original image
+    image = Image.open(uploaded_file).convert('L')  # grayscale
+    st.image(image, caption="Original X-ray", use_column_width=True)
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    # Preprocess and run inference
+    input_tensor = preprocess_image(uploaded_file)
+    input_tensor = input_tensor.to(next(model.parameters()).device)
 
-@app.route('/', methods=['GET', 'POST'])
-def upload_file():
-    original_image_url = None
-    output_image_url = None
+    with torch.no_grad():
+        reconstructed = model(input_tensor)
 
-    if request.method == 'POST':
-        file = request.files['file']
-        if file and file.filename != '':
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
+    # Compute anomaly map
+    anomaly_map = compute_anomaly_map(input_tensor, reconstructed)
 
-            # Generate output image (overlayed anomaly heatmap)
-            output_filename = 'output_' + filename
-            output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+    # Normalize and convert anomaly map to heatmap
+    anomaly_map = (anomaly_map * 255 / anomaly_map.max()).astype(np.uint8)
+    heatmap = cv2.applyColorMap(anomaly_map, cv2.COLORMAP_JET)
+    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
-            generate_output_image(filepath, output_path)
-
-            original_image_url = url_for('static', filename='uploads/' + filename)
-            output_image_url = url_for('static', filename='uploads/' + output_filename)
-
-    return render_template('index.html',
-                           original_image=original_image_url,
-                           output_image=output_image_url)
-
-if __name__ == '__main__':
-    download_model()  # Download model if not present
-    app.run(debug=True)
+    st.image(heatmap, caption="Anomaly Heatmap", use_column_width=True)
