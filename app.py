@@ -52,14 +52,23 @@ if uploaded_file is not None:
     # Debug info
     st.write("Anomaly map shape:", anomaly_map.shape)
     st.write("Anomaly map dtype:", anomaly_map.dtype)
+    st.write("Anomaly map min value:", anomaly_map.min())
     st.write("Anomaly map max value:", anomaly_map.max())
+    st.write("Anomaly map mean value:", anomaly_map.mean())
+    st.write("Anomaly map std deviation:", anomaly_map.std())
 
     # Show grayscale anomaly map (before heatmap)
     st.image(anomaly_map, caption="Normalized Anomaly Map (grayscale)", clamp=True, use_container_width=True)
 
-    # Apply heatmap
-    heatmap = cv2.applyColorMap(anomaly_map, cv2.COLORMAP_JET)
+    # Threshold anomaly map to highlight stronger anomalies
+    threshold = 30  # you can adjust this threshold
+    anomaly_map_thresh = np.where(anomaly_map > threshold, anomaly_map, 0).astype(np.uint8)
+
+    st.image(anomaly_map_thresh, caption="Thresholded Anomaly Map", clamp=True, use_container_width=True)
+
+    # Apply heatmap on thresholded map
+    heatmap = cv2.applyColorMap(anomaly_map_thresh, cv2.COLORMAP_JET)
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
     # Display heatmap
-    st.image(heatmap, caption="Anomaly Heatmap", use_container_width=True)
+    st.image(heatmap, caption="Thresholded Anomaly Heatmap", use_container_width=True)
