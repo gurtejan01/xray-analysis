@@ -7,6 +7,9 @@ from inference import load_model, preprocess_image, compute_anomaly_map
 from unet_autoencoder import UNetAutoencoder
 import os
 
+# Optional: Confirm OpenCV is working
+st.write("OpenCV version:", cv2.__version__)
+
 # Load the model only once
 @st.cache_resource
 def load_trained_model():
@@ -23,7 +26,7 @@ uploaded_file = st.file_uploader("Choose an X-ray image", type=["png", "jpg", "j
 if uploaded_file is not None:
     # Display original image
     image = Image.open(uploaded_file).convert('L')  # grayscale
-    st.image(image, caption="Original X-ray", use_column_width=True)
+    st.image(image, caption="Original X-ray", use_container_width=True)
 
     # Preprocess and run inference
     input_tensor = preprocess_image(uploaded_file)
@@ -35,9 +38,28 @@ if uploaded_file is not None:
     # Compute anomaly map
     anomaly_map = compute_anomaly_map(input_tensor, reconstructed)
 
-    # Normalize and convert anomaly map to heatmap
-    anomaly_map = (anomaly_map * 255 / anomaly_map.max()).astype(np.uint8)
+    # Convert to numpy if needed
+    if not isinstance(anomaly_map, np.ndarray):
+        anomaly_map = anomaly_map.cpu().numpy()
+
+    # Normalize anomaly map safely
+    max_val = anomaly_map.max()
+    if max_val > 0:
+        anomaly_map = (anomaly_map * 255 / max_val).astype(np.uint8)
+    else:
+        anomaly_map = (anomaly_map * 255).astype(np.uint8)
+
+    # Debug info
+    st.write("Anomaly map shape:", anomaly_map.shape)
+    st.write("Anomaly map dtype:", anomaly_map.dtype)
+    st.write("Anomaly map max value:", anomaly_map.max())
+
+    # Show grayscale anomaly map (before heatmap)
+    st.image(anomaly_map, caption="Normalized Anomaly Map (grayscale)", clamp=True, use_container_width=True)
+
+    # Apply heatmap
     heatmap = cv2.applyColorMap(anomaly_map, cv2.COLORMAP_JET)
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
-    st.image(heatmap, caption="Anomaly Heatmap", use_column_width=True)
+    # Display heatmap
+    st.image(heatmap, caption="Anomaly Heatmap", use_container_width=True)
