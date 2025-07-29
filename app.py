@@ -36,9 +36,8 @@ if uploaded_file is not None:
     heatmap = apply_colormap(anomaly_map)
     original_np = (input_tensor.squeeze().cpu().numpy() * 255).astype(np.uint8)
 
-    # Add threshold slider for interactivity
     threshold = st.slider("Anomaly Threshold", min_value=0, max_value=255, value=50)
-   overlay = overlay_heatmap_on_image(original_np, heatmap, anomaly_map, alpha=0.7, threshold=threshold)
+    overlay = overlay_heatmap_on_image(original_np, heatmap, anomaly_map, alpha=0.7, threshold=threshold)
 
     # Show final result
     st.image(overlay, caption="Anomaly Heatmap Overlay", use_container_width=True)

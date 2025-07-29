@@ -20,7 +20,7 @@ def preprocess_image(image_file):
         transforms.ToTensor()
     ])
     img = Image.open(image_file).convert('L')
-    return transform(img).unsqueeze(0)  # add batch dim
+    return transform(img).unsqueeze(0)  # add batch dimension
 
 def compute_anomaly_map(original, reconstructed):
     error_map = torch.abs(original - reconstructed)
@@ -33,8 +33,16 @@ def apply_colormap(error_map):
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
     return heatmap
 
-def overlay_heatmap_on_image(original_img, heatmap, alpha=0.5):
+def overlay_heatmap_on_image(original_img, heatmap, anomaly_map, alpha=0.7, threshold=50):
     if original_img.ndim == 2:
-        original_img = np.stack([original_img]*3, axis=-1)  # grayscale to RGB
-    overlayed = cv2.addWeighted(heatmap, alpha, original_img, 1 - alpha, 0)
-    return overlayed
+        original_img = np.stack([original_img] * 3, axis=-1)
+
+    # Create mask where anomaly exceeds threshold
+    mask = anomaly_map > threshold
+
+    overlay = original_img.copy()
+    overlay[mask] = cv2.addWeighted(
+        original_img[mask], 1 - alpha,
+        heatmap[mask], alpha, 0
+    )
+    return overlay
