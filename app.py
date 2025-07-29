@@ -31,11 +31,14 @@ if uploaded_file is not None:
     with torch.no_grad():
         reconstructed = model(input_tensor)
 
-    # Generate anomaly heatmap overlay
+    # Anomaly detection
     anomaly_map = compute_anomaly_map(input_tensor, reconstructed)
     heatmap = apply_colormap(anomaly_map)
     original_np = (input_tensor.squeeze().cpu().numpy() * 255).astype(np.uint8)
-    overlay = overlay_heatmap_on_image(original_np, heatmap)
+
+    # Add threshold slider for interactivity
+    threshold = st.slider("Anomaly Threshold", min_value=0, max_value=255, value=50)
+    overlay = overlay_heatmap_on_image(original_np, heatmap, anomaly_map, threshold=threshold)
 
     # Show final result
     st.image(overlay, caption="Anomaly Heatmap Overlay", use_container_width=True)
